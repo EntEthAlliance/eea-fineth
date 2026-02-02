@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EEA | Interactive Pages</title>
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:rgba(255,255,255,.10);
+      --accent:#7c8aff;
+      --accent2:#00d4aa;
+      --shadow:0 20px 70px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(124,138,255,.25), transparent 55%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(0,212,170,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:20px 22px 12px;
+      border-bottom:1px solid var(--border);
+      background: rgba(17,24,39,.72);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .wrap{max-width:1400px;margin:0 auto}
+    .title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    h1{
+      margin:0;
+      font-size:18px;
+      font-weight:650;
+      letter-spacing:.2px;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .tabs{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+    .tab{
+      appearance:none;
+      border:1px solid var(--border);
+      background: rgba(15,23,42,.75);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:13px;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .tab:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.22)}
+    .tab[aria-selected="true"]{
+      background: linear-gradient(135deg, rgba(124,138,255,.26), rgba(0,212,170,.12));
+      border-color: rgba(124,138,255,.55);
+    }
+    main{
+      max-width:1400px;
+      margin:16px auto 26px;
+      padding:0 16px;
+    }
+    .frame-shell{
+      border:1px solid var(--border);
+      border-radius:18px;
+      overflow:hidden;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      height: calc(100vh - 150px);
+      min-height: 620px;
+    }
+    iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#fff;
+    }
+    .hint{
+      margin:10px 4px 0;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .hint a{color:var(--text); text-decoration:none; border-bottom:1px dotted rgba(229,231,235,.35)}
+    .hint a:hover{border-bottom-color: rgba(229,231,235,.8)}
+    @media (max-width: 700px){
+      .frame-shell{height: calc(100vh - 180px); min-height: 520px;}
+      .meta{white-space:normal}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">
+        <h1>EEA | Unified Interactive Pages</h1>
+        <div class="meta">Tabs load the original pages unchanged (isolated in an iframe).</div>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Pages">
+        <button class="tab" role="tab" id="tab-why" aria-controls="frame" data-src="why-ethereum-works.html" aria-selected="true">Why Ethereum Works</button>
+        <button class="tab" role="tab" id="tab-arch" aria-controls="frame" data-src="ethereum-architecture-overview.html" aria-selected="false">Ethereum Architecture</button>
+        <button class="tab" role="tab" id="tab-fin" aria-controls="frame" data-src="global-finance-map.html" aria-selected="false">Global Finance Map</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="frame-shell">
+      <iframe id="frame" title="Embedded page" loading="eager" referrerpolicy="no-referrer"></iframe>
+    </div>
+    <div class="hint">
+      <span>Deep links: <code>#why</code> · <code>#architecture</code> · <code>#finance</code></span>
+      <span>Open current tab in new page: <a id="openLink" href="#" target="_blank" rel="noopener">Open</a></span>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      const frame = document.getElementById('frame');
+      const openLink = document.getElementById('openLink');
+      const tabs = Array.from(document.querySelectorAll('.tab'));
+      const routes = {
+        why: 'why-ethereum-works.html',
+        architecture: 'ethereum-architecture-overview.html',
+        finance: 'global-finance-map.html'
+      };
+
+      function setSelected(tab){
+        tabs.forEach(t => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+      }
+
+      function load(src){
+        frame.src = src;
+        openLink.href = src;
+      }
+
+      function activateByHash(){
+        const key = (location.hash || '#why').replace('#','').toLowerCase();
+        const src = routes[key] || routes.why;
+        const tab = tabs.find(t => t.dataset.src === src) || tabs[0];
+        setSelected(tab);
+        load(src);
+      }
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const src = tab.dataset.src;
+          setSelected(tab);
+          load(src);
+          const hash = Object.keys(routes).find(k => routes[k] === src) || 'why';
+          history.replaceState(null, '', '#' + hash);
+        });
+        tab.addEventListener('keydown', (e) => {
+          if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+          e.preventDefault();
+          const i = tabs.indexOf(tab);
+          const next = e.key === 'ArrowRight' ? tabs[(i+1)%tabs.length] : tabs[(i-1+tabs.length)%tabs.length];
+          next.focus();
+        });
+      });
+
+      window.addEventListener('hashchange', activateByHash);
+      activateByHash();
+    })();
+  </script>
+</body>
+</html>
